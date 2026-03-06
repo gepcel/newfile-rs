@@ -4,6 +4,7 @@ use std::io::Write;
 use std::path::Path;
 use std::process::Command;
 
+
 pub fn create_new_file(name: &str, write_clipboard: bool, open_after: bool, root: &str, editor_path: &str) {
     if name.is_empty() {
         return;
@@ -12,12 +13,14 @@ pub fn create_new_file(name: &str, write_clipboard: bool, open_after: bool, root
     let root_path = Path::new(root);
     let target = root_path.join(name);
 
+    // create parent directories if specified
     if let Some(parent) = target.parent() {
         if !parent.as_os_str().is_empty() {
             let _ = fs::create_dir_all(parent);
         }
     }
 
+    // handle duplicate file names by appending a counter
     let mut counter = 0;
     let mut full_path = target.clone();
     while full_path.exists() {
@@ -39,12 +42,14 @@ pub fn create_new_file(name: &str, write_clipboard: bool, open_after: bool, root
         full_path = parent.join(file_name);
     }
 
+    // ensure parent directories again just in case
     if let Some(parent) = full_path.parent() {
         if !parent.as_os_str().is_empty() {
             let _ = fs::create_dir_all(parent);
         }
     }
 
+    // create the file and optionally write clipboard
     if let Ok(mut file) = File::create(&full_path) {
         if write_clipboard {
             if let Ok(text) = get_clipboard_string() {
@@ -73,6 +78,9 @@ pub fn create_new_file(name: &str, write_clipboard: bool, open_after: bool, root
     }
 }
 
+// recursively create a folder structure and optionally open TotalCMD at the final
+// destination. duplicate names are handled by appending a counter like
+// create_new_file does.
 pub fn create_new_folder(name: &str, open_after: bool, root: &str, totalcmd_path: &str) {
     if name.is_empty() {
         return;
@@ -81,6 +89,7 @@ pub fn create_new_folder(name: &str, open_after: bool, root: &str, totalcmd_path
     let root_path = Path::new(root);
     let target = root_path.join(name);
 
+    // handle duplicates on the last segment
     let mut counter = 0;
     let mut full_path = target.clone();
     while full_path.exists() {
@@ -97,6 +106,7 @@ pub fn create_new_folder(name: &str, open_after: bool, root: &str, totalcmd_path
     let _ = fs::create_dir_all(&full_path);
 
     if open_after && Path::new(totalcmd_path).exists() {
+        // Convert path to Windows format with backslashes
         let full_path_str = full_path.to_string_lossy().to_string()
             .replace("/", "\\");
         let _ = Command::new(totalcmd_path)
@@ -130,10 +140,10 @@ mod tests {
         let tmp = tempdir().unwrap();
         let root = tmp.path().to_string_lossy().to_string();
 
-        create_new_file("a/b/file.txt", false, false, &root);
+        create_new_file("a/b/file.txt", false, false, &root, "notepad.exe");
         assert!(tmp.path().join("a/b/file.txt").is_file());
 
-        create_new_file("a/b/file.txt", false, false, &root);
+        create_new_file("a/b/file.txt", false, false, &root, "notepad.exe");
         assert!(tmp.path().join("a/b/file1.txt").is_file());
     }
 }

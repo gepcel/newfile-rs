@@ -60,9 +60,9 @@ If the file does not exist, it is created with default values.
 - `autoopenaftercreated` – `true`/`false` (default `true`)
 - `texteditor` – path to your preferred text editor (default `notepad.exe`). The editor is used when opening files after creation.
 - `totalcmd` – path to `TOTALCMD64.EXE`. On first run the program tries to locate it automatically (looking three levels up from its own location). If that fails, you can set the correct path manually in the ini file.
-- `txtformat`: Comma-separated list of text file extensions (not currently used)
+- `txtformat`: Comma-separated list of text file extensions. If absent the program falls back to a built-in default (`.txt,.md,.ini,.py,.xml,.cs,.ps1,.bat`).
 
-Example `NewFile.ini`:
+Example `NewFile.ini` (added `txtformat` key to control which extensions are considered text files):
 
 ```ini
 [Configuration]

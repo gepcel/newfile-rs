@@ -19,11 +19,12 @@ fn get_file_type(name: &str, txt_formats: &[String]) -> bool {
     false
 }
 
-const TXT_FORMATS: &[&str] = &[".txt", ".md", ".ini", ".py", ".xml", ".cs"];
 
 fn main() {
     #[cfg(target_os = "windows")]
-    unsafe { FreeConsole(); }
+    unsafe {
+        FreeConsole();
+    }
 
     let args: Vec<String> = env::args().collect();
     let root_dir = if args.len() > 1 {
@@ -69,6 +70,7 @@ fn main() {
     wind.borrow_mut().end();
     wind.borrow_mut().show();
 
+    // Set window icon
     if let Ok(exe_path) = std::env::current_exe() {
         if let Some(parent) = exe_path.parent() {
             if let Some(parent) = parent.parent() {
@@ -84,6 +86,7 @@ fn main() {
         }
     }
 
+    // Load config
     let app_dir = std::env::current_exe()
         .ok()
         .and_then(|pb| pb.parent().map(|p| p.to_path_buf()))
@@ -93,20 +96,34 @@ fn main() {
         app_dir.to_string_lossy().to_string(),
     )));
 
-    check_clipboard.borrow_mut().set(config.borrow().clipboard);
-    check_open.borrow_mut().set(config.borrow().open_after);
+    // grab the list of text formats once; we don't expect it to change at
+    // runtime (no UI to edit it) so we can clone out of the config and move
+    // that into the various closures below.
+    let initial_txt_formats: Vec<String> = {
+        let cfg = config.borrow();
+        cfg.txt_formats.clone()
+    };
 
+    // Set initial checkbox states
+    {
+        let cfg = config.borrow();
+        check_clipboard.borrow_mut().set(cfg.clipboard);
+        check_open.borrow_mut().set(cfg.open_after);
+    }
+
+    // Debug window title - shows configuration status
     let cfg = config.borrow();
     wind.borrow_mut().set_label(&format!("NewFile [{}{}]",
         if cfg.open_after { "OpenAfter:ON " } else { "OpenAfter:OFF " },
         if cfg.clipboard { "Clipboard:ON" } else { "Clipboard:OFF" }
     ));
-    drop(cfg);
+    drop(cfg); // release borrow
 
     let (tx, rx) = fltk::app::channel::<Message>();
 
+    // Input field event handler (Enter key)
     let tx_clone_for_input = tx.clone();
-    let txt_formats_for_input: Vec<String> = TXT_FORMATS.iter().map(|s| s.to_string()).collect();
+    let txt_formats_for_input: Vec<String> = initial_txt_formats.clone();
     let txt_filename_clone_for_input = txt_filename.clone();
 
     txt_filename.borrow_mut().handle(move |_, event| {
@@ -132,6 +149,7 @@ fn main() {
         }
     });
 
+    // Create file button callback
     {
         let tx = tx.clone();
         btn_file.set_callback(move |_| {
@@ -139,6 +157,7 @@ fn main() {
         });
     }
 
+    // Create folder button callback
     {
         let tx = tx.clone();
         btn_folder.set_callback(move |_| {
@@ -146,22 +165,26 @@ fn main() {
         });
     }
 
+    // Checkbox event handlers
     {
         let tx = tx.clone();
         check_clipboard.borrow_mut().set_callback(move |c| {
-            tx.send(Message::ToggleClipboard(c.is_checked()));
+            let checked = c.is_checked();
+            tx.send(Message::ToggleClipboard(checked));
         });
     }
 
     {
         let tx = tx.clone();
         check_open.borrow_mut().set_callback(move |c| {
-            tx.send(Message::ToggleOpenAfter(c.is_checked()));
+            let checked = c.is_checked();
+            tx.send(Message::ToggleOpenAfter(checked));
         });
     }
 
+    // Window event handler (global keyboard shortcuts)
     let tx_clone = tx.clone();
-    let txt_formats: Vec<String> = TXT_FORMATS.iter().map(|s| s.to_string()).collect();
+    let txt_formats: Vec<String> = initial_txt_formats.clone();
     let wind_clone = wind.clone();
     let txt_filename_clone = txt_filename.clone();
     let check_clipboard_clone = check_clipboard.clone();
@@ -186,16 +209,20 @@ fn main() {
                     wind_clone.borrow_mut().hide();
                     true
                 } else if key == enums::Key::F1 {
+                    // Toggle and let callback handle the message
                     let current = {
                         check_clipboard_clone.borrow().is_checked()
                     };
-                    check_clipboard_clone.borrow_mut().set(!current);
+                    let new_val = !current;
+                    check_clipboard_clone.borrow_mut().set(new_val);
+                    // The callback will send the ToggleClipboard message
                     true
                 } else if key == enums::Key::F2 {
                     let current = {
                         check_open_clone.borrow().is_checked()
                     };
-                    check_open_clone.borrow_mut().set(!current);
+                    let new_val = !current;
+                    check_open_clone.borrow_mut().set(new_val);
                     true
                 } else {
                     false
@@ -205,6 +232,7 @@ fn main() {
         }
     });
 
+    // Main event loop
     while app.wait() {
         if let Some(msg) = rx.recv() {
             match msg {
@@ -216,22 +244,25 @@ fn main() {
                         check_open.borrow().is_checked()
                     };
                     if is_file {
+                        let editor = config.borrow().text_editor.clone();
                         file_ops::create_new_file(
                             &name,
                             check_clipboard.borrow().is_checked(),
                             open_after,
                             &root_dir,
-                            &config.borrow().text_editor,
+                            &editor,
                         );
                     } else {
-                        let cfg = config.borrow();
+                        let totalcmd = {
+                            let cfg = config.borrow();
+                            cfg.totalcmd_path.clone()
+                        };
                         file_ops::create_new_folder(
                             &name,
                             open_after,
                             &root_dir,
-                            &cfg.totalcmd_path,
+                            &totalcmd,
                         );
-                        drop(cfg);
                     }
                     wind.borrow_mut().hide();
                 }
@@ -248,7 +279,7 @@ fn main() {
 
 #[derive(Debug, Clone, Copy)]
 enum Message {
-    Create(bool, bool),
+    Create(bool, bool), // is_file, toggle_open_after
     ToggleClipboard(bool),
     ToggleOpenAfter(bool),
 }
