@@ -3,11 +3,10 @@ name = "newfile"
 version = "0.1.0"
 edition = "2021"
 
-[target.x86_64-pc-windows-msvc]
-rustflags = ["-C", "link-args=/SUBSYSTEM:WINDOWS"]
 
 [dependencies]
-fltk = "1.4"
+iced = "0.9"
+iced_native = "0.10"
 configparser = "3.0"
 clipboard-win = "5.0"
 dunce = "1.0.2"

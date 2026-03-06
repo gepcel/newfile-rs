@@ -1,7 +1,7 @@
 # NewFile for Total Commander
 
 A lightweight utility for **Total Commander** to quickly create new files and folders with a simple hotkey.  
-It provides a small GUI window where you enter a name, optionally write clipboard content into new files, and automatically open the created item in your preferred editor or Total Commander itself.
+The user interface is implemented using the [iced](https://github.com/iced-rs/iced) Rust GUI library (previously FLTK), offering a compact cross-platform window where you enter a name, optionally write clipboard content into new files, and automatically open the created item in your preferred editor or Total Commander itself.
 
 This is a Rust rewrite of the [C# version](https://github.com/gepcel/totalcmd-newfile)
 
@@ -85,12 +85,14 @@ If you prefer to compile the program yourself:
   cd newfile-rs
   ```
 
-3. Build the release version:
+3. Install dependencies and build the release version:
   ```bash
   cargo build --release
-  # or
+  # or on Windows
   ./build.ps1
   ```
+
+   The build pulls in `iced` and its graphics backend so compiling may take a few minutes on the first run.
 
 4. The executable will be at `target/release/NewFile.exe` (or newfile on Linux, but the program is primarily intended for Windows).
 
