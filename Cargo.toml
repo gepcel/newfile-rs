@@ -5,8 +5,7 @@ edition = "2021"
 
 
 [dependencies]
-iced = "0.9"
-iced_native = "0.10"
+windows = { version = "0.48", features = ["Win32_Foundation", "Win32_Graphics_Gdi", "Win32_UI_WindowsAndMessaging", "Win32_UI_Controls", "Win32_UI_Input_KeyboardAndMouse", "Win32_System_LibraryLoader"] }
 configparser = "3.0"
 clipboard-win = "5.0"
 dunce = "1.0.2"
