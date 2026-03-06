@@ -19,7 +19,7 @@ This is a Rust rewrite of the [C# version](https://github.com/gepcel/totalcmd-ne
   - `F2` – toggle open-after-creation
   - `Enter` – create (file/folder according to extension)
   - `Shift+Enter` – force opposite type (file ↔ folder)
-  - `Ctrl+Enter` – switch the `clipboard writing` temperary when creating file
+  - `Ctrl+Enter` – switch the `open-after-creation` temperary when creating file or folder
   - `Escape` – close window without creating
   - **Total Commander integration**: run the program from a button or hotkey, passing the target directory as argument.
 
