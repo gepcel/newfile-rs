@@ -9,9 +9,9 @@ use windows::core::{PCWSTR, HSTRING};
 use windows::Win32::Foundation::{HWND, LPARAM, LRESULT, WPARAM};
 use windows::Win32::System::LibraryLoader::GetModuleHandleW;
 use windows::Win32::UI::Controls::{BST_CHECKED};
-use windows::Win32::UI::WindowsAndMessaging::{*, RegisterClassW, WNDCLASSW};
-use windows::Win32::Graphics::Gdi::{UpdateWindow, GetStockObject, DEFAULT_GUI_FONT, COLOR_WINDOW, HBRUSH};
-use windows::Win32::UI::WindowsAndMessaging::SetProcessDPIAware;
+use windows::Win32::UI::WindowsAndMessaging::*;
+use windows::Win32::Graphics::Gdi::{UpdateWindow, COLOR_WINDOW, HBRUSH, CreateFontW, FW_NORMAL, DEFAULT_CHARSET, OUT_DEFAULT_PRECIS, CLIP_DEFAULT_PRECIS, DEFAULT_QUALITY, DEFAULT_PITCH, FF_SWISS};
+use windows::Win32::UI::WindowsAndMessaging::{SetProcessDPIAware, LoadIconW, LoadCursorW, IDC_ARROW, WNDCLASSEXW, RegisterClassExW};
 
 // numeric key codes (avoid importing VK_* names)
 const VK_RETURN: u16 = 0x0D;
@@ -128,7 +128,7 @@ unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam: 
 
 unsafe fn create_controls(hwnd: HWND, state: &mut AppState) {
     let hinst = GetModuleHandleW(None).unwrap();
-    let hfont = GetStockObject(DEFAULT_GUI_FONT); // 获取系统字体
+    let hfont = CreateFontW(-16, 0, 0, 0, FW_NORMAL.0 as i32, 0, 0, 0, DEFAULT_CHARSET.0 as u32, OUT_DEFAULT_PRECIS.0 as u32, CLIP_DEFAULT_PRECIS.0 as u32, DEFAULT_QUALITY.0 as u32, DEFAULT_PITCH.0 as u32 | FF_SWISS.0 as u32, w!("Segoe UI"));
     // 创建静态文本并设置字体
     let label_hwnd = CreateWindowExW(
         WINDOW_EX_STYLE(0),
@@ -137,8 +137,8 @@ unsafe fn create_controls(hwnd: HWND, state: &mut AppState) {
         WS_CHILD | WS_VISIBLE,
         5,
         5,
-        530,
-        20,
+        560,
+        24,
         hwnd,
         HMENU(0),
         hinst,
@@ -156,8 +156,8 @@ unsafe fn create_controls(hwnd: HWND, state: &mut AppState) {
         WINDOW_STYLE(WS_CHILD.0 | WS_VISIBLE.0 | (ES_AUTOHSCROLL as u32)),
         5,
         30,
-        530,
-        30,
+        560,
+        32,
         hwnd,
         HMENU(ID_EDIT as isize),
         hinst,
@@ -171,9 +171,9 @@ unsafe fn create_controls(hwnd: HWND, state: &mut AppState) {
         w!("Write Clipboard (F1)"),
         WINDOW_STYLE(WS_CHILD.0 | WS_VISIBLE.0 | (BS_AUTOCHECKBOX as u32)),
         5,
-        65,
-        155,
-        25,
+        68,
+        165,
+        28,
         hwnd,
         HMENU(ID_TOGGLE_CLIP as isize),
         hinst,
@@ -187,10 +187,10 @@ unsafe fn create_controls(hwnd: HWND, state: &mut AppState) {
         w!("BUTTON"),
         w!("Open After (F2)"),
         WINDOW_STYLE(WS_CHILD.0 | WS_VISIBLE.0 | (BS_AUTOCHECKBOX as u32)),
-        165,
-        65,
-        120,
-        25,
+        175,
+        68,
+        130,
+        28,
         hwnd,
         HMENU(ID_TOGGLE_OPEN as isize),
         hinst,
@@ -204,10 +204,10 @@ unsafe fn create_controls(hwnd: HWND, state: &mut AppState) {
         w!("BUTTON"),
         w!("Folder (Enter)"),
         WINDOW_STYLE(WS_CHILD.0 | WS_VISIBLE.0 | (BS_PUSHBUTTON as u32)),
-        290,
-        65,
-        110,
-        25,
+        310,
+        68,
+        115,
+        28,
         hwnd,
         HMENU(ID_FOLDER_BUTTON as isize),
         hinst,
@@ -220,10 +220,10 @@ unsafe fn create_controls(hwnd: HWND, state: &mut AppState) {
         w!("BUTTON"),
         w!("File (Shift+Enter)"),
         WINDOW_STYLE(WS_CHILD.0 | WS_VISIBLE.0 | (BS_PUSHBUTTON as u32)),
-        405,
-        65,
-        120,
-        25,
+        430,
+        68,
+        130,
+        28,
         hwnd,
         HMENU(ID_FILE_BUTTON as isize),
         hinst,
@@ -246,14 +246,31 @@ fn main() {
         let _ = SetProcessDPIAware();  // 忽略错误
         let hinst = GetModuleHandleW(None).unwrap();
         let class_name = w!("NewFileClass");
-        let wc = WNDCLASSW {
+        // 从嵌入的资源加载图标（ID = 1）
+        let hicon = LoadIconW(hinst, PCWSTR(1 as *const u16)).unwrap_or_default();
+        // 加载默认光标
+        let hcursor = LoadCursorW(None, IDC_ARROW).unwrap_or_default();
+
+        let wc = WNDCLASSEXW {
+            cbSize: std::mem::size_of::<WNDCLASSEXW>() as u32,
             hInstance: hinst,
             lpszClassName: class_name,
             lpfnWndProc: Some(wndproc),
-            hbrBackground: HBRUSH((COLOR_WINDOW.0 as isize) + 1),  // 设置背景刷
+            hbrBackground: HBRUSH((COLOR_WINDOW.0 as isize) + 1),
+            hIcon: hicon,
+            hIconSm: hicon,   // 小图标（标题栏）
+            hCursor: hcursor,
             ..Default::default()
         };
-        RegisterClassW(&wc);
+        RegisterClassExW(&wc);
+        // let wc = WNDCLASSW {
+        //     hInstance: hinst,
+        //     lpszClassName: class_name,
+        //     lpfnWndProc: Some(wndproc),
+        //     hbrBackground: HBRUSH((COLOR_WINDOW.0 as isize) + 1),  // 设置背景刷
+        //     ..Default::default()
+        // };
+        // RegisterClassW(&wc);
 
         let hwnd = CreateWindowExW(
             WINDOW_EX_STYLE(0),
@@ -262,8 +279,8 @@ fn main() {
             WS_OVERLAPPEDWINDOW & !WS_THICKFRAME,
             CW_USEDEFAULT,
             CW_USEDEFAULT,
-            550,
-            130,
+            585,
+            145,
             HWND(0),
             HMENU(0),
             hinst,
@@ -283,20 +300,7 @@ fn main() {
 
         let state_ptr = GetWindowLongPtrW(hwnd, GWLP_USERDATA) as *mut AppState;
         create_controls(hwnd, &mut *state_ptr);
-        
-        // 为所有控件设置系统字体
-        let hfont = GetStockObject(DEFAULT_GUI_FONT);
-        // 遍历所有需要设置字体的控件句柄
-        let controls = [
-            (*state_ptr).hwnd_edit,
-            (*state_ptr).hwnd_clip,
-            (*state_ptr).hwnd_open,
-            // 还有静态文本，但它的句柄在create_controls内部未保存，可以再获取或保存
-            // 这里假设你保存了静态文本句柄，或者你可以通过FindWindowEx获取
-        ];
-        for &ctrl in &controls {
-            SendMessageW(ctrl, WM_SETFONT, WPARAM(hfont.0 as usize), LPARAM(1));
-        }
+
         ShowWindow(hwnd, SW_SHOW);
         UpdateWindow(hwnd);
 
