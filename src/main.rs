@@ -164,19 +164,24 @@ unsafe extern "system" fn wndproc(hwnd: HWND, msg: u32, wparam: WPARAM, lparam: 
                         PostQuitMessage(0);
                     }
                     ID_TOGGLE_CLIP => {
-                        // 切换复选框状态并保存配置
+                        let from_keyboard = lparam.0 == 0; // 加速键产生时 lParam 为 0
                         let current = SendMessageW(state.hwnd_clip, BM_GETCHECK, WPARAM(0), LPARAM(0)).0 as i32 == BST_CHECKED.0 as i32;
-                        let new_state = !current;
-                        SendMessageW(state.hwnd_clip, BM_SETCHECK, WPARAM(new_state as usize), LPARAM(0));
+                        let new_state = if from_keyboard { !current } else { current };
+                        if from_keyboard {
+                            // 快捷键需要手动更新控件状态
+                            SendMessageW(state.hwnd_clip, BM_SETCHECK, WPARAM(new_state as usize), LPARAM(0));
+                        }
                         state.config.set_clipboard(new_state);
                     }
                     ID_TOGGLE_OPEN => {
-                        // 切换复选框状态并保存配置
+                        let from_keyboard = lparam.0 == 0;
                         let current = SendMessageW(state.hwnd_open, BM_GETCHECK, WPARAM(0), LPARAM(0)).0 as i32 == BST_CHECKED.0 as i32;
-                        let new_state = !current;
-                        SendMessageW(state.hwnd_open, BM_SETCHECK, WPARAM(new_state as usize), LPARAM(0));
+                        let new_state = if from_keyboard { !current } else { current };
+                        if from_keyboard {
+                            SendMessageW(state.hwnd_open, BM_SETCHECK, WPARAM(new_state as usize), LPARAM(0));
+                        }
                         state.config.set_open_after(new_state);
-                    }
+                    } 
                     ID_CANCEL => {
                         PostQuitMessage(0);
                     }
