@@ -1,9 +1,67 @@
 # NewFile for Total Commander
 
-A lightweight utility for **Total Commander** to quickly create new files and folders with a simple hotkey.  
+A lightweight utility for **Total Commander** to quickly create new files and folders with a simple hotkey.
 It provides a small GUI window where you enter a name, optionally write clipboard content into new files, and automatically open the created item in your preferred editor or Total Commander itself.
 
 This is a Rust rewrite of the [C# version](https://github.com/gepcel/totalcmd-newfile)
+
+## Project Overview
+
+NewFile-rs is a lightweight file/folder creation tool designed specifically for Total Commander. With a simple GUI and keyboard shortcuts, you can quickly create new files or folders in the current directory, with support for automatic clipboard content writing and auto-opening created files.
+
+This project has **4 branches**, each using a different GUI approach:
+
+| Branch | GUI Framework | Description | Link |
+|--------|---------------|-------------|------|
+| **main** | FLTK | Default branch, lightweight cross-platform GUI | [View Branch](https://github.com/gepcel/newfile-rs/tree/main) |
+| **win10** | Native Win32 API | Optimized for Windows 10, native look and feel | [View Branch](https://github.com/gepcel/newfile-rs/tree/win10) |
+| **win32** | Native Win32 API | Pure Win32 API implementation for all Windows versions | [View Branch](https://github.com/gepcel/newfile-rs/tree/win32) |
+| **iced** | Iced | Modern cross-platform GUI with Elm-inspired architecture | [View Branch](https://github.com/gepcel/newfile-rs/tree/iced) |
+
+> **💡 Highly Recommended**: For most users, we recommend the **win10 branch** (best native Windows experience) or **main branch** (lightweight and stable). Both branches are well-tested and offer the best stability.
+
+## Branch Comparison
+
+### 🏆 win10 Branch — Native Win32 API
+- **GUI Framework**: Raw Windows API via `windows` crate
+- **Pros**: 
+  - Native Windows look and feel
+  - Minimal dependencies, smallest binary size
+  - Best performance on Windows 10+
+  - No external runtime required
+- **Cons**: Windows only
+- **Best for**: Windows 10 users who want the most native experience
+
+### 🏆 main Branch — FLTK
+- **GUI Framework**: FLTK (Fast Light Toolkit)
+- **Pros**: 
+  - Lightweight and fast
+  - Cross-platform (Windows/Linux/macOS)
+  - Stable and mature
+  - Small binary size
+- **Cons**: Less "native" look compared to Win32 API
+- **Best for**: Users who prefer a stable, cross-platform solution
+
+### win32 Branch — Native Win32 API
+- **GUI Framework**: Raw Windows API via `windows` crate
+- **Pros**: 
+  - Pure Win32 implementation
+  - Compatible with all Windows versions (7/8/10/11)
+  - Minimal dependencies
+- **Cons**: Windows only, less optimized than win10 branch
+- **Best for**: Users on older Windows versions (7/8)
+
+### iced Branch — Iced Framework
+- **GUI Framework**: Iced (Elm-inspired, cross-platform)
+- **Pros**: 
+  - Modern, reactive UI architecture
+  - Cross-platform support
+  - Clean and maintainable code
+- **Cons**: 
+  - Larger binary size
+  - Higher resource usage
+  - Experimental for this project
+- **Best for**: Developers interested in modern Rust GUI patterns
 
 ## Features
 
