@@ -1,6 +1,7 @@
 use configparser::ini::Ini;
 use std::path::Path;
 use dunce;
+use std::env;
 
 pub struct NewFileConfig {
     pub clipboard: bool,
@@ -16,9 +17,17 @@ pub struct NewFileConfig {
     pub need_save: bool,
 }
 
+/// 获取程序所在目录作为配置文件保存路径
+fn get_exe_dir() -> String {
+    env::current_exe()
+        .ok()
+        .and_then(|p| p.parent().map(|p| p.to_string_lossy().to_string()))
+        .unwrap_or_else(|| ".".to_string())
+}
+
 impl NewFileConfig {
-    pub fn new(current_path: String) -> Self {
-        let config_path = format!("{}\\NewFile.ini", current_path);
+    pub fn new() -> Self {
+        let config_path = format!("{}\\NewFile.ini", get_exe_dir());
 
         let mut ini = Ini::new();
         let mut clipboard = true;
@@ -94,7 +103,8 @@ impl NewFileConfig {
             );
 
             // Try to find TotalCMD
-            let possible_path = format!("{}\\..\\..\\..\\TOTALCMD64.EXE", current_path);
+            // let possible_path = format!("{}\\..\\..\\..\\TOTALCMD64.EXE", current_path);
+            let possible_path = format!("{}\\..\\..\\..\\TOTALCMD64.EXE", config_path);
             if Path::new(&possible_path).exists() {
                 totalcmd_path = dunce::canonicalize(&possible_path).unwrap().display().to_string();
                 ini.set("Configuration", "totalcmd", Some(totalcmd_path.clone()));

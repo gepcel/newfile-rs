@@ -341,7 +341,7 @@ fn main() {
 
         let state = Box::new(AppState {
             root_dir: root_dir.clone(),
-            config: config::NewFileConfig::new(root_dir.clone()),
+            config: config::NewFileConfig::new(),
             hwnd_edit: HWND(0),
             hwnd_clip: HWND(0),
             hwnd_open: HWND(0),
