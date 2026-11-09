@@ -2,6 +2,7 @@ mod config;
 mod file_ops;
 
 use std::env;
+use std::fs;
 use std::path::Path;
 use std::ptr::null_mut;
 use windows::w;
@@ -293,13 +294,11 @@ unsafe fn create_controls(hwnd: HWND, state: &mut AppState) {
 }
 
 fn main() {
-    let args: Vec<String> = env::args().collect();
-    let root_dir = if args.len() > 1 {
-        args[1].clone()
-    } else {
-        std::env::current_dir()
-            .map(|p| p.to_string_lossy().to_string())
-            .unwrap_or_default()
+    let current = std::env::current_dir().map(|p| p.to_string_lossy().to_string()).unwrap_or_default();
+    let mut args = env::args().skip(1); // skip args[0]
+    let root_dir = match(args.next(), args.next()) {
+        (Some(p), None) if fs::metadata(&p).is_ok_and(|m| m.is_dir()) => p, // if args[1] is valid and len(args)==2
+        _ => current,
     };
 
     unsafe {
